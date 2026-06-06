@@ -32,12 +32,17 @@ class TokenUsage(APIModel):
     completion_tokens: int
     total_tokens: int
 
+class Metrics(APIModel):
+    latency_seconds: float
+    tokens_per_second: float
+
 # полный и собранный инференс
 class InferenceResponse(APIModel):
     model: str
     text: str
     finish_reason: str | None
     usage: TokenUsage
+    metrics: Metrics
 
 
 class HealthResponse(APIModel):

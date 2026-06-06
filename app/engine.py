@@ -1,9 +1,9 @@
 from threading import Lock
 
 from vllm import LLM, SamplingParams
-
+import time
 from app.config import Settings
-from app.schemas import ChatRequest, GenerateRequest, InferenceResponse, TokenUsage
+from app.schemas import ChatRequest, GenerateRequest, InferenceResponse, TokenUsage, Metrics
 
 
 class InferenceError(RuntimeError):
@@ -42,7 +42,7 @@ class InferenceEngine:
     def generate(self, request: GenerateRequest) -> InferenceResponse:
         self._ensure_loaded()
         sampling_params = self._sampling_params(request)
-
+        start_time = time.perf_counter()
         try:
             with self._lock:
                 outputs = self.llm.generate(
@@ -54,13 +54,15 @@ class InferenceEngine:
             raise InvalidInferenceRequest(str(exc)) from exc
         except Exception as exc:
             raise InferenceError(f"vLLM generate failed: {exc}") from exc
-
-        return self._to_response(outputs[0])
+        end_time = time.perf_counter()
+        latency  = end_time - start_time
+        return self._to_response(outputs[0],latency)
     # чат с LLM
     def chat(self, request: ChatRequest) -> InferenceResponse:
         self._ensure_loaded()
         sampling_params = self._sampling_params(request)
         messages = [message.model_dump() for message in request.messages]
+        start_time = time.perf_counter()
 
         try:
             with self._lock:
@@ -69,12 +71,14 @@ class InferenceEngine:
                     sampling_params=sampling_params,
                     use_tqdm=False,
                 )
+
         except (TypeError, ValueError) as exc:
             raise InvalidInferenceRequest(str(exc)) from exc
         except Exception as exc:
             raise InferenceError(f"vLLM chat failed: {exc}") from exc
-
-        return self._to_response(outputs[0])
+        end_time = time.perf_counter()
+        latency  = end_time - start_time
+        return self._to_response(outputs[0], latency)
 
     def _ensure_loaded(self) -> None:
         if self.llm is None:
@@ -91,10 +95,14 @@ class InferenceEngine:
             top_p=request.top_p or self.settings.default_top_p,
         )
 
-    def _to_response(self, request_output) -> InferenceResponse:
+    def _to_response(self, request_output, latency) -> InferenceResponse:
         completion = request_output.outputs[0]
         prompt_tokens = len(request_output.prompt_token_ids or [])
         completion_tokens = len(completion.token_ids or [])
+        latency_seconds = latency
+        tokens_per_second = completion_tokens / latency
+
+
 
         return InferenceResponse(
             model=self.settings.model_name,
@@ -105,4 +113,8 @@ class InferenceEngine:
                 completion_tokens=completion_tokens,
                 total_tokens=prompt_tokens + completion_tokens,
             ),
+            metrics= Metrics(
+                latency_seconds = latency_seconds,
+                tokens_per_second=tokens_per_second
+            )
         )
