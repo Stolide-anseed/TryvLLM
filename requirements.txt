@@ -1,1 +1,4 @@
-vllm
+vllm==0.21.0
+fastapi
+uvicorn[standard]
+pydantic-settings
