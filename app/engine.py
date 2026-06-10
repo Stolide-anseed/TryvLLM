@@ -1,6 +1,6 @@
 from threading import Lock
+from typing import Any
 
-from vllm import LLM, SamplingParams
 import time
 from app.config import Settings
 from app.schemas import ChatRequest, GenerateRequest, InferenceResponse, TokenUsage, Metrics
@@ -21,7 +21,7 @@ class InvalidInferenceRequest(InferenceError):
 class InferenceEngine:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.llm: LLM | None = None
+        self.llm: Any | None = None
         self._lock = Lock()
 
     @property
@@ -31,6 +31,8 @@ class InferenceEngine:
     def load(self) -> None:
         if self.llm is not None:
             return
+
+        from vllm import LLM
 
         self.llm = LLM(
             model=self.settings.model_name,
@@ -84,7 +86,9 @@ class InferenceEngine:
         if self.llm is None:
             raise EngineNotReadyError("Inference engine is not loaded")
 
-    def _sampling_params(self, request: GenerateRequest | ChatRequest) -> SamplingParams:
+    def _sampling_params(self, request: GenerateRequest | ChatRequest):
+        from vllm import SamplingParams
+
         return SamplingParams(
             max_tokens=request.max_tokens or self.settings.default_max_tokens,
             temperature=(

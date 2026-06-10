@@ -14,6 +14,14 @@ class Settings(BaseSettings):
     default_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     default_top_p: float = Field(default=0.9, gt=0.0, le=1.0)
 
+    rag_enabled: bool = True
+    rag_collection_name: str = "movies"
+    rag_embedding_model: str = "intfloat/multilingual-e5-small"
+    rag_embedding_device: str = "cpu"
+    rag_use_prefixes: bool | None = None
+    rag_disable_thinking: bool = True
+    qdrant_url: str = "http://127.0.0.1:6333"
+
     model_config = SettingsConfigDict(env_prefix="LLM_", extra="ignore")
 
 

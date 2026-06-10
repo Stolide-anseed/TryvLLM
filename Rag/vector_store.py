@@ -3,6 +3,17 @@ from uuid import NAMESPACE_URL, uuid5
 
 
 client = QdrantClient(host="127.0.0.1", port=6333)
+
+
+def configure_client(url: str) -> None:
+    global client
+    client = QdrantClient(url=url)
+
+
+def collection_exists(collection_name: str) -> bool:
+    return client.collection_exists(collection_name)
+
+
 def create_collection(vector_size: int, collection_name:str) -> dict:
     client.create_collection(
         collection_name=collection_name,

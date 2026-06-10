@@ -1,16 +1,35 @@
 from Rag.embedder import Embedder
-from Rag.vector_store import search
+from Rag.vector_store import collection_exists, search
 
 class Retriever:
-    def __init__(self, collection_name:str, model_name:str):
+    def __init__(
+        self,
+        collection_name: str,
+        model_name: str,
+        device: str = "cpu",
+        use_prefixes: bool | None = None,
+    ):
         self.coll_name = collection_name
-        self.models = Embedder(model_name=model_name)
-    def retieve(self, query, top_k):
+        self.models = Embedder(
+            model_name=model_name,
+            device=device,
+            use_prefixes=use_prefixes,
+        )
+
+    @property
+    def is_ready(self) -> bool:
+        try:
+            return collection_exists(self.coll_name)
+        except Exception:
+            return False
+
+    def retrieve(self, query, top_k):
         query, top_k = self._validate_query(query, top_k)
 
         query_vector = self.models.encode_query(query=query)
 
-        query_vector = query_vector.tolist()
+        if hasattr(query_vector, "tolist"):
+            query_vector = query_vector.tolist()
 
         response = search(query_vector=query_vector, top_k=top_k,collection_name=self.coll_name)
 
@@ -19,6 +38,9 @@ class Retriever:
             "collection": self.coll_name,
             "results": self._format_results(response.get("results", [])),
         }
+
+    def retieve(self, query, top_k):
+        return self.retrieve(query, top_k)
 
     def _validate_query(self, query, top_k) -> tuple[str, int]:
         if not isinstance(query, str):

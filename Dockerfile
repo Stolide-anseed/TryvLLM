@@ -8,6 +8,7 @@ COPY requirements.txt ./requirements.txt
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+COPY Rag ./Rag
 COPY scripts ./scripts
 
 EXPOSE 8000
