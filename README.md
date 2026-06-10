@@ -1,4 +1,4 @@
-# TryvLLM
+# Local-llm-rag-server
 
 Учебный локальный inference-сервис на базе vLLM с FastAPI и RAG по сюжетам
 фильмов.
