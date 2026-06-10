@@ -56,3 +56,18 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 `
   -e LLM_MAX_MODEL_LEN=1024 `
   tryvllm:dev
 ```
+
+## Подготовка документов для RAG
+
+Markdown-документы с YAML-метаданными находятся в `docs/data`. Для разбиения
+всех документов на chunks запусти:
+
+```powershell
+python .\Rag\preprocessor.py
+```
+
+Результат сохраняется в `docs/documents.json`. Размер и overlap можно изменить:
+
+```powershell
+python .\Rag\preprocessor.py --max-chars 1000 --overlap-chars 150
+```

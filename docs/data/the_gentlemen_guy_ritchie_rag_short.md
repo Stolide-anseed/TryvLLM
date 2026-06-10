@@ -7,12 +7,6 @@ genres:
   - crime
   - action
   - comedy
-directors:
-  - Guy Ritchie
-language: ru
-content_type: own-summary
-document_type: movie-summary
-contains_spoilers: true
 ---
 
 # Краткое описание

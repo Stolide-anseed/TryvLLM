@@ -7,15 +7,6 @@ genres:
   - animation
   - comedy
   - fantasy
-directors:
-  - Andrew Adamson
-  - Vicky Jenson
-franchise: Shrek
-installment: 1
-language: ru
-content_type: own-summary
-document_type: movie-summary
-contains_spoilers: true
 ---
 
 # Краткое описание

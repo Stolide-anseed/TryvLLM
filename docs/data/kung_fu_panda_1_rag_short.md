@@ -8,15 +8,6 @@ genres:
   - action
   - comedy
   - fantasy
-directors:
-  - John Stevenson
-  - Mark Osborne
-franchise: Kung Fu Panda
-installment: 1
-language: ru
-content_type: own-summary
-document_type: movie-summary
-contains_spoilers: true
 ---
 
 # Краткое описание

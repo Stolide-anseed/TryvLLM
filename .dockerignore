@@ -7,3 +7,5 @@ __pycache__/
 env
 .cache
 models/
+Rag/__pycache__/
+tests/__pycache__/

@@ -8,14 +8,6 @@ genres:
   - action
   - comedy
   - fantasy
-directors:
-  - Jennifer Yuh Nelson
-franchise: Kung Fu Panda
-installment: 2
-language: ru
-content_type: own-summary
-document_type: movie-summary
-contains_spoilers: true
 ---
 
 # Краткое описание

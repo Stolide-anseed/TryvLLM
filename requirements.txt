@@ -2,3 +2,6 @@ vllm==0.21.0
 fastapi
 uvicorn[standard]
 pydantic-settings
+PyYAML>=6.0,<7.0
+sentence_transformers
+qdrant-client

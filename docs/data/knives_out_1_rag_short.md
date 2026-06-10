@@ -8,14 +8,6 @@ genres:
   - crime
   - comedy
   - drama
-directors:
-  - Rian Johnson
-franchise: Knives Out
-installment: 1
-language: ru
-content_type: own-summary
-document_type: movie-summary
-contains_spoilers: true
 ---
 
 # Краткое описание
