@@ -1,5 +1,6 @@
 from Rag.embedder import Embedder
-from Rag.vector_store import collection_exists, search
+from Rag.vector_store import collection_supports_hybrid_search, search
+
 
 class Retriever:
     def __init__(
@@ -19,28 +20,38 @@ class Retriever:
     @property
     def is_ready(self) -> bool:
         try:
-            return collection_exists(self.coll_name)
+            return collection_supports_hybrid_search(self.coll_name)
         except Exception:
             return False
 
-    def retrieve(self, query, top_k):
+    def retrieve(
+        self,
+        query: str,
+        top_k: int,
+        sparse_query: str | None = None,
+    ) -> dict:
         query, top_k = self._validate_query(query, top_k)
+        sparse_query = self._validate_sparse_query(sparse_query, fallback=query)
 
         query_vector = self.models.encode_query(query=query)
 
         if hasattr(query_vector, "tolist"):
             query_vector = query_vector.tolist()
 
-        response = search(query_vector=query_vector, top_k=top_k,collection_name=self.coll_name)
+        response = search(
+            query_vector=query_vector,
+            sparse_query=sparse_query,
+            top_k=top_k,
+            collection_name=self.coll_name,
+        )
 
         return {
-            "query": query,
+            "dense_query": query,
+            "sparse_query": sparse_query,
             "collection": self.coll_name,
-            "results": self._format_results(response.get("results", [])),
+            "dense_results": self._format_results(response.get("dense_response", [])),
+            "sparse_results": self._format_results(response.get("sparse_response", [])),
         }
-
-    def retieve(self, query, top_k):
-        return self.retrieve(query, top_k)
 
     def _validate_query(self, query, top_k) -> tuple[str, int]:
         if not isinstance(query, str):
@@ -59,15 +70,28 @@ class Retriever:
 
         return normalized_query, top_k
 
+    @staticmethod
+    def _validate_sparse_query(sparse_query: str | None, fallback: str) -> str:
+        if sparse_query is None:
+            return fallback
+        if not isinstance(sparse_query, str):
+            raise TypeError("sparse_query должен быть строкой")
+
+        normalized_query = sparse_query.strip()
+        if not normalized_query:
+            raise ValueError("sparse_query не может быть пустым")
+        return normalized_query
+
     def _format_results(self, points) -> list[dict]:
         formatted_results = []
 
         for point in points:
             payload = point.payload or {}
             metadata = payload.get("metadata") or {}
+            chunk_id = payload.get("chunk_id") or str(point.id)
 
             formatted_results.append({
-                "chunk_id": payload.get("chunk_id"),
+                "chunk_id": chunk_id,
                 "text": payload.get("text", ""),
                 "score": float(point.score),
                 "metadata": metadata,

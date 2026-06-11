@@ -4,6 +4,8 @@ from pathlib import Path
 from Rag.preprocessor import preprocess_documents
 from Rag.embedder import Embedder
 from Rag.vector_store import (
+    collection_exists,
+    collection_supports_hybrid_search,
     configure_client,
     count_points,
     create_collection,
@@ -86,6 +88,16 @@ def ingest(
         create_collection(
             vector_size=embedder.vector_size,
             collection_name=collection_name,
+        )
+    elif not collection_exists(collection_name):
+        create_collection(
+            vector_size=embedder.vector_size,
+            collection_name=collection_name,
+        )
+    elif not collection_supports_hybrid_search(collection_name):
+        raise RuntimeError(
+            f"Collection {collection_name!r} не поддерживает hybrid search. "
+            "Перезапустите ingestion с флагом --recreate."
         )
 
     upsert_result = upsert_chunks(

@@ -129,6 +129,7 @@ docker run --rm --gpus all --ipc=host -p 8000:8000 `
   -e LLM_QDRANT_URL=http://host.docker.internal:6333 `
   -v hf-cache:/root/.cache/huggingface `
   -v vllm-cache:/root/.cache/vllm `
+  -v fastembed-cache:/root/.cache/fastembed `
   tryvllm:dev
 ```
 
@@ -203,8 +204,10 @@ curl.exe -X POST "http://localhost:8000/chat" `
 
 ### `POST /rag/chat`
 
-Переформулирует вопрос для семантического поиска, ищет релевантные chunks в
-Qdrant, формирует контекст и генерирует ответ со ссылками на источники.
+Переформулирует вопрос для dense-поиска, выполняет dense и BM25 поиск в Qdrant,
+объединяет результаты через Reciprocal Rank Fusion, формирует контекст и
+генерирует ответ со ссылками на источники. Для BM25 используется исходный
+вопрос, чтобы сохранить точные слова и имена.
 
 ```powershell
 $json = @{
@@ -225,7 +228,8 @@ RAG-ответ содержит:
 
 - ответ модели;
 - поисковый запрос после переформулирования;
-- использованные chunks и их similarity score;
+- использованные chunks и нормализованный RRF score;
+- исходные `dense_score` и `sparse_score` каждого источника;
 - citations;
 - prompt/completion token usage;
 - retrieval, generation и total latency;
@@ -258,7 +262,7 @@ Ingestion pipeline:
 3. создаёт chunks с overlap;
 4. сохраняет промежуточный `docs/documents.json`;
 5. создаёт embeddings;
-6. загружает vectors, текст и metadata в Qdrant;
+6. загружает named dense vectors, BM25 sparse vectors, текст и metadata в Qdrant;
 7. проверяет количество загруженных points.
 
 Повторный upsert без удаления collection:
@@ -272,6 +276,15 @@ python -m scripts.ingest
 ```powershell
 python -m scripts.ingest --recreate
 ```
+
+После перехода с обычного dense-поиска на hybrid search существующую collection
+необходимо пересоздать, чтобы добавить named vectors `dense` и `bm25`.
+Проверка готовности RAG также проверяет наличие обоих named vectors.
+Если collection отсутствует, ingestion создаст её автоматически. Если найдена
+старая несовместимая collection, ingestion сообщит о необходимости `--recreate`.
+
+При первом ingestion или BM25-запросе FastEmbed скачивает модель
+`Qdrant/bm25`. Её последующие запуски используют из локального кэша.
 
 ## Конфигурация
 
@@ -292,6 +305,8 @@ python -m scripts.ingest --recreate
 | `LLM_RAG_EMBEDDING_DEVICE` | `cpu` | Устройство embedding-модели |
 | `LLM_RAG_USE_PREFIXES` | auto | Использовать `query:` / `passage:` |
 | `LLM_RAG_DISABLE_THINKING` | `true` | Добавлять `/no_think` для Qwen3 |
+| `LLM_RAG_CANDIDATE_MULTIPLIER` | `3` | Во сколько раз расширять пул кандидатов до RRF |
+| `LLM_RAG_RRF_K` | `60` | Константа сглаживания Reciprocal Rank Fusion |
 | `LLM_QUERY_REWRITING_ENABLED` | `true` | Переформулировать вопрос перед retrieval |
 | `LLM_QUERY_REWRITING_TEMPERATURE` | `0.0` | Temperature для query rewriting |
 | `LLM_QUERY_REWRITING_MAX_TOKENS` | `128` | Лимит токенов для query rewriting |
@@ -326,6 +341,9 @@ API запускается с одним Uvicorn worker. Несколько work
 .\.venv\Scripts\python.exe -m unittest `
   .\tests\test_rag_service.py `
   .\tests\test_rag_endpoint.py `
+  .\tests\test_hybrid_retriever.py `
+  .\tests\test_vector_store.py `
+  .\tests\test_ingest.py `
   -v
 ```
 
@@ -347,8 +365,8 @@ TryvLLM/
 ├── Rag/
 │   ├── embedder.py        # embeddings и E5-префиксы
 │   ├── preprocessor.py    # Markdown -> chunks
-│   ├── retriever.py       # semantic retrieval
-│   ├── service.py         # Retrieval -> context -> vLLM
+│   ├── retriever.py       # dense + BM25 retrieval
+│   ├── service.py         # RRF -> context -> vLLM
 │   └── vector_store.py    # работа с Qdrant
 ├── scripts/
 │   ├── generator.py       # offline inference
@@ -365,7 +383,9 @@ TryvLLM/
 ## Текущее состояние и ограничения
 
 - RAG работает по небольшому набору пересказов сюжетов фильмов.
-- Retrieval использует dense vector search без reranker и hybrid search.
+- Retrieval использует hybrid search: dense embeddings + BM25 + RRF.
+- RRF score нормализован в диапазон `0..1`; исходные dense/BM25 scores
+  возвращаются отдельно.
 - Размер контекста пока ограничивается символами, а не токенами.
 - Некоторые исходные chunks содержат буквальные `/n`; данные требуют очистки и
   повторного ingestion.
@@ -379,6 +399,6 @@ TryvLLM/
 1. очистить документы и повторно создать collection;
 2. добавить metadata filters;
 3. оценивать retrieval на фиксированном наборе вопросов;
-4. добавить reranker и сравнить качество/latency;
+4. добавить reranker и сравнить его с hybrid search по качеству/latency;
 5. ограничивать контекст по токенам;
 6. добавить streaming и память диалога.

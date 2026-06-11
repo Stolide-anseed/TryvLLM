@@ -41,14 +41,23 @@ class RAGService:
         query_rewriting_enabled: bool = True,
         query_rewriting_temperature: float = 0.0,
         query_rewriting_max_tokens: int = 128,
+        retrieval_candidate_multiplier: int = 3,
+        rrf_k: int = 60,
         disable_thinking: bool = True,
     ):
+        if retrieval_candidate_multiplier <= 0:
+            raise ValueError("retrieval_candidate_multiplier должен быть больше нуля")
+        if rrf_k < 0:
+            raise ValueError("rrf_k не может быть отрицательным")
+
         self.retriever = retriever
         self.inference_engine = inference_engine
         self.query_rewriter = query_rewriter
         self.query_rewriting_enabled = query_rewriting_enabled
         self.query_rewriting_temperature = query_rewriting_temperature
         self.query_rewriting_max_tokens = query_rewriting_max_tokens
+        self.retrieval_candidate_multiplier = retrieval_candidate_multiplier
+        self.rrf_k = rrf_k
         self.disable_thinking = disable_thinking
 
     @property
@@ -66,15 +75,24 @@ class RAGService:
         try:
             retrieval_response = self.retriever.retrieve(
                 query=retrieval_query,
-                top_k=request.top_k,
+                sparse_query=request.question,
+                top_k=request.top_k * self.retrieval_candidate_multiplier,
             )
         except (TypeError, ValueError):
             raise
         except Exception as exc:
             raise RAGServiceError(f"Retrieval failed: {exc}") from exc
+        retrieved_dense_results = retrieval_response.get("dense_results", [])
+        retrieved_sparse_results = retrieval_response.get("sparse_results", [])
+
+        retrieved_results = self.reciprocal_rank_fusion(
+            dense_results=retrieved_dense_results,
+            sparse_results=retrieved_sparse_results,
+            top_k=request.top_k,
+            rrf_k=self.rrf_k,
+        )
         retrieval_latency = time.perf_counter() - retrieval_started_at
 
-        retrieved_results = retrieval_response.get("results", [])
         relevant_results = [
             result
             for result in retrieved_results
@@ -144,6 +162,55 @@ class RAGService:
             ),
         )
 
+    @staticmethod
+    def reciprocal_rank_fusion(
+        dense_results: list[dict],
+        sparse_results: list[dict],
+        top_k: int,
+        rrf_k: int = 60,
+    ) -> list[dict]:
+        if top_k <= 0:
+            raise ValueError("top_k должен быть больше нуля")
+        if rrf_k < 0:
+            raise ValueError("rrf_k не может быть отрицательным")
+
+        fused: dict[str, dict] = {}
+        rankings = (
+            ("dense_score", dense_results),
+            ("sparse_score", sparse_results),
+        )
+
+        for score_name, results in rankings:
+            seen_chunk_ids: set[str] = set()
+            for rank, result in enumerate(results, start=1):
+                chunk_id = result.get("chunk_id")
+                if not chunk_id or chunk_id in seen_chunk_ids:
+                    continue
+                seen_chunk_ids.add(chunk_id)
+
+                if chunk_id not in fused:
+                    fused[chunk_id] = {
+                        **result,
+                        "dense_score": None,
+                        "sparse_score": None,
+                        "rrf_score": 0.0,
+                    }
+
+                fused[chunk_id][score_name] = float(result.get("score", 0.0))
+                fused[chunk_id]["rrf_score"] += 1 / (rrf_k + rank)
+
+        max_rrf_score = len(rankings) / (rrf_k + 1)
+        for result in fused.values():
+            normalized_score = result["rrf_score"] / max_rrf_score
+            result["rrf_score"] = normalized_score
+            result["score"] = normalized_score
+
+        return sorted(
+            fused.values(),
+            key=lambda result: result["rrf_score"],
+            reverse=True,
+        )[:top_k]
+
     def _rewrite_query(self, question: str) -> str:
         if self.query_rewriter is None:
             return question
@@ -196,6 +263,9 @@ class RAGService:
                 chunk_id=result.get("chunk_id"),
                 text=used_text,
                 score=float(result.get("score", 0.0)),
+                dense_score=result.get("dense_score"),
+                sparse_score=result.get("sparse_score"),
+                rrf_score=result.get("rrf_score"),
                 document_id=metadata.get("document_id"),
                 title=metadata.get("title"),
                 section=metadata.get("section"),

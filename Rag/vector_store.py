@@ -14,20 +14,48 @@ def collection_exists(collection_name: str) -> bool:
     return client.collection_exists(collection_name)
 
 
-def create_collection(vector_size: int, collection_name:str) -> dict:
+def collection_supports_hybrid_search(collection_name: str) -> bool:
+    if not collection_exists(collection_name):
+        return False
+
+    params = client.get_collection(collection_name).config.params
+    dense_vectors = params.vectors
+    sparse_vectors = params.sparse_vectors
+
+    return (
+        isinstance(dense_vectors, dict)
+        and "dense" in dense_vectors
+        and isinstance(sparse_vectors, dict)
+        and "bm25" in sparse_vectors
+    )
+
+
+def create_collection(vector_size: int, collection_name: str) -> dict:
     client.create_collection(
         collection_name=collection_name,
-        vectors_config = models.VectorParams(
-            size=vector_size,
-            distance=models.Distance.COSINE
-        )
+        vectors_config={
+            "dense": models.VectorParams(
+                size=vector_size,
+                distance=models.Distance.COSINE,
+            )
+        },
+        sparse_vectors_config={
+            "bm25": models.SparseVectorParams(
+                modifier=models.Modifier.IDF,
+            )
+        },
     )
     return {
         "success": True,
         "Build collection": collection_name,
     }
 
-def upsert_chunks(chunks:list[dict], vectors:list[list[float]], collection_name:str) -> dict:
+
+def upsert_chunks(
+    chunks: list[dict],
+    vectors: list[list[float]],
+    collection_name: str,
+) -> dict:
     if len(chunks) != len(vectors):
         raise ValueError("Не совпадает количество chunks и vectors")
 
@@ -44,7 +72,13 @@ def upsert_chunks(chunks:list[dict], vectors:list[list[float]], collection_name:
                 # Создаём стабильный UUID из строкового chunk_id.
                 # Также преимущество, что результат детерминированный
                 id=str(uuid5(NAMESPACE_URL, chunk_id)),
-                vector=vector,
+                vector={
+                    "dense": vector,
+                    "bm25": models.Document(
+                        text=chunk["text"],
+                        model="Qdrant/bm25",
+                    ),
+                },
                 payload=chunk,
             )
         )
@@ -66,10 +100,22 @@ def search(
     query_vector: list[float],
     top_k: int,
     collection_name: str,
+    sparse_query: str,
 ) -> dict:
-    response = client.query_points(
+    dense_response = client.query_points(
         collection_name=collection_name,
         query=query_vector,
+        using="dense",
+        limit=top_k,
+        with_payload=True,
+    )
+    sparse_response = client.query_points(
+        collection_name=collection_name,
+        query=models.Document(
+            text=sparse_query,
+            model="Qdrant/bm25",
+        ),
+        using="bm25",
         limit=top_k,
         with_payload=True,
     )
@@ -77,8 +123,10 @@ def search(
     return {
         "success": True,
         "collection": collection_name,
-        "results": response.points,
+        "dense_response": dense_response.points,
+        "sparse_response": sparse_response.points,
     }
+
 
 def count_points(collection_name: str) -> int:
     result = client.count(
@@ -87,7 +135,8 @@ def count_points(collection_name: str) -> int:
     )
     return result.count
 
-def delete_collection(collection_name:str)->dict:
+
+def delete_collection(collection_name: str) -> dict:
     try:
         client.delete_collection(collection_name=collection_name)
     except Exception as exc:

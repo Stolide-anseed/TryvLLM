@@ -65,6 +65,9 @@ class RAGSource(APIModel):
     chunk_id: str | None
     text: str
     score: float
+    dense_score: float | None = None
+    sparse_score: float | None = None
+    rrf_score: float | None = None
     document_id: str | None
     title: str | None
     section: str | None

@@ -47,6 +47,8 @@ async def lifespan(app: FastAPI):
             query_rewriting_enabled=settings.query_rewriting_enabled,
             query_rewriting_temperature=settings.query_rewriting_temperature,
             query_rewriting_max_tokens=settings.query_rewriting_max_tokens,
+            retrieval_candidate_multiplier=settings.rag_candidate_multiplier,
+            rrf_k=settings.rag_rrf_k,
             disable_thinking=settings.rag_disable_thinking,
         )
     yield

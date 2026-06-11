@@ -4,4 +4,5 @@ uvicorn[standard]
 pydantic-settings
 PyYAML>=6.0,<7.0
 sentence_transformers
-qdrant-client
+qdrant-client>=1.18,<2
+fastembed>=0.8,<0.9

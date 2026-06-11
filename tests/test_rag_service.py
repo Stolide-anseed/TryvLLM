@@ -39,12 +39,28 @@ RESULTS = [
 class FakeRetriever:
     is_ready = True
 
-    def __init__(self):
+    def __init__(self, dense_results=None, sparse_results=None):
         self.last_query = None
+        self.last_sparse_query = None
+        self.last_top_k = None
+        self.dense_results = RESULTS if dense_results is None else dense_results
+        self.sparse_results = RESULTS[:1] if sparse_results is None else sparse_results
 
-    def retrieve(self, query: str, top_k: int) -> dict:
+    def retrieve(
+        self,
+        query: str,
+        top_k: int,
+        sparse_query: str | None = None,
+    ) -> dict:
         self.last_query = query
-        return {"query": query, "results": RESULTS[:top_k]}
+        self.last_sparse_query = sparse_query
+        self.last_top_k = top_k
+        return {
+            "dense_query": query,
+            "sparse_query": sparse_query,
+            "dense_results": self.dense_results[:top_k],
+            "sparse_results": self.sparse_results[:top_k],
+        }
 
 
 class FakeQueryRewriter:
@@ -104,17 +120,27 @@ class RAGServiceTests(unittest.TestCase):
         self.assertEqual(response.answer, "По победил Тай Лунга [1].")
         self.assertEqual(response.rewritten_query, "По победа над Тай Лунгом")
         self.assertEqual(self.retriever.last_query, "По победа над Тай Лунгом")
+        self.assertEqual(self.retriever.last_sparse_query, "Кто победил Тай Лунга?")
+        self.assertEqual(self.retriever.last_top_k, 6)
         self.assertEqual(len(response.sources), 1)
         self.assertEqual(response.sources[0].citation, 1)
+        self.assertEqual(response.sources[0].dense_score, 0.91)
+        self.assertEqual(response.sources[0].sparse_score, 0.91)
+        self.assertEqual(response.sources[0].rrf_score, 1.0)
         self.assertIn("[Источник 1]", self.engine.last_request.messages[1].content)
         self.assertIn("Кто победил Тай Лунга?", self.engine.last_request.messages[1].content)
         self.assertIn("/no_think", self.engine.last_request.messages[1].content)
 
     def test_answer_returns_no_context_without_calling_engine(self) -> None:
-        response = self.service.answer(
+        service = RAGService(
+            FakeRetriever(dense_results=[], sparse_results=[]),
+            self.engine,
+            query_rewriter=self.rewriter,
+        )
+
+        response = service.answer(
             RAGRequest(
                 question="Неизвестный вопрос",
-                score_threshold=0.99,
             )
         )
 
@@ -136,6 +162,54 @@ class RAGServiceTests(unittest.TestCase):
 
         self.assertEqual(self.retriever.last_query, "Кто победил Тай Лунга?")
         self.assertEqual(response.rewritten_query, "Кто победил Тай Лунга?")
+
+    def test_reciprocal_rank_fusion_combines_scores_and_removes_duplicates(self) -> None:
+        dense_results = [
+            {**RESULTS[0], "score": 0.9},
+            {**RESULTS[1], "score": 0.8},
+        ]
+        sparse_results = [
+            {**RESULTS[1], "score": 12.0},
+            {**RESULTS[0], "score": 8.0},
+        ]
+
+        results = self.service.reciprocal_rank_fusion(
+            dense_results=dense_results,
+            sparse_results=sparse_results,
+            top_k=2,
+        )
+
+        self.assertEqual(len(results), 2)
+        self.assertEqual({result["chunk_id"] for result in results}, {
+            RESULTS[0]["chunk_id"],
+            RESULTS[1]["chunk_id"],
+        })
+        self.assertEqual(results[0]["dense_score"], 0.9)
+        self.assertEqual(results[0]["sparse_score"], 8.0)
+        self.assertGreater(results[0]["rrf_score"], 0.0)
+        self.assertLessEqual(results[0]["rrf_score"], 1.0)
+
+    def test_reciprocal_rank_fusion_supports_empty_channel_and_top_k(self) -> None:
+        results = self.service.reciprocal_rank_fusion(
+            dense_results=RESULTS,
+            sparse_results=[],
+            top_k=1,
+        )
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["chunk_id"], RESULTS[0]["chunk_id"])
+        self.assertEqual(results[0]["dense_score"], RESULTS[0]["score"])
+        self.assertIsNone(results[0]["sparse_score"])
+        self.assertEqual(results[0]["rrf_score"], 0.5)
+
+    def test_reciprocal_rank_fusion_skips_result_without_chunk_id(self) -> None:
+        results = self.service.reciprocal_rank_fusion(
+            dense_results=[{"text": "missing id", "score": 0.9}],
+            sparse_results=[],
+            top_k=1,
+        )
+
+        self.assertEqual(results, [])
 
     def test_build_context_respects_character_limit(self) -> None:
         context, sources = self.service.build_context(

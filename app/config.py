@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     rag_embedding_device: str = "cpu"
     rag_use_prefixes: bool | None = None
     rag_disable_thinking: bool = True
+    rag_candidate_multiplier: int = Field(default=3, ge=1, le=10)
+    rag_rrf_k: int = Field(default=60, ge=0, le=1000)
     query_rewriting_enabled: bool = True
     query_rewriting_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     query_rewriting_max_tokens: int = Field(default=128, ge=1, le=512)

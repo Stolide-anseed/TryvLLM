@@ -3,6 +3,7 @@ FROM vllm/vllm-openai:v0.21.0-cu129-ubuntu2404
 WORKDIR /app
 
 ENTRYPOINT []
+ENV FASTEMBED_CACHE_PATH=/root/.cache/fastembed
 
 COPY requirements.txt ./requirements.txt
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
