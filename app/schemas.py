@@ -72,6 +72,7 @@ class RAGSource(APIModel):
 
 
 class RAGMetrics(APIModel):
+    query_rewrite_latency_seconds: float = 0.0
     retrieval_latency_seconds: float
     generation_latency_seconds: float
     total_latency_seconds: float
@@ -84,6 +85,7 @@ class RAGResponse(APIModel):
     model: str
     answer: str
     finish_reason: str | None
+    rewritten_query: str | None = None
     sources: list[RAGSource]
     usage: TokenUsage
     metrics: RAGMetrics

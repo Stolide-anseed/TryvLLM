@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     rag_embedding_device: str = "cpu"
     rag_use_prefixes: bool | None = None
     rag_disable_thinking: bool = True
+    query_rewriting_enabled: bool = True
+    query_rewriting_temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    query_rewriting_max_tokens: int = Field(default=128, ge=1, le=512)
     qdrant_url: str = "http://127.0.0.1:6333"
 
     model_config = SettingsConfigDict(env_prefix="LLM_", extra="ignore")

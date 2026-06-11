@@ -19,6 +19,7 @@ from app.schemas import (
     RAGResponse,
 )
 from Rag.retriever import Retriever
+from Rag.QueryRewriter import QueryRewriter
 from Rag.service import RAGNotReadyError, RAGService, RAGServiceError
 from Rag.vector_store import configure_client
 
@@ -42,6 +43,10 @@ async def lifespan(app: FastAPI):
         app.state.rag_service = RAGService(
             retriever=retriever,
             inference_engine=engine,
+            query_rewriter=QueryRewriter(engine),
+            query_rewriting_enabled=settings.query_rewriting_enabled,
+            query_rewriting_temperature=settings.query_rewriting_temperature,
+            query_rewriting_max_tokens=settings.query_rewriting_max_tokens,
             disable_thinking=settings.rag_disable_thinking,
         )
     yield

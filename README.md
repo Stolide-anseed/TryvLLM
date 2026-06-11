@@ -203,8 +203,8 @@ curl.exe -X POST "http://localhost:8000/chat" `
 
 ### `POST /rag/chat`
 
-Ищет релевантные chunks в Qdrant, формирует контекст и генерирует ответ со
-ссылками на источники.
+Переформулирует вопрос для семантического поиска, ищет релевантные chunks в
+Qdrant, формирует контекст и генерирует ответ со ссылками на источники.
 
 ```powershell
 $json = @{
@@ -224,6 +224,7 @@ curl.exe -X POST "http://localhost:8000/rag/chat" `
 RAG-ответ содержит:
 
 - ответ модели;
+- поисковый запрос после переформулирования;
 - использованные chunks и их similarity score;
 - citations;
 - prompt/completion token usage;
@@ -291,6 +292,9 @@ python -m scripts.ingest --recreate
 | `LLM_RAG_EMBEDDING_DEVICE` | `cpu` | Устройство embedding-модели |
 | `LLM_RAG_USE_PREFIXES` | auto | Использовать `query:` / `passage:` |
 | `LLM_RAG_DISABLE_THINKING` | `true` | Добавлять `/no_think` для Qwen3 |
+| `LLM_QUERY_REWRITING_ENABLED` | `true` | Переформулировать вопрос перед retrieval |
+| `LLM_QUERY_REWRITING_TEMPERATURE` | `0.0` | Temperature для query rewriting |
+| `LLM_QUERY_REWRITING_MAX_TOKENS` | `128` | Лимит токенов для query rewriting |
 | `LLM_QDRANT_URL` | `http://127.0.0.1:6333` | Адрес Qdrant |
 
 API запускается с одним Uvicorn worker. Несколько workers загрузили бы несколько
@@ -306,6 +310,7 @@ API запускается с одним Uvicorn worker. Несколько work
 
 `/rag/chat` дополнительно возвращает:
 
+- `query_rewrite_latency_seconds`;
 - `retrieval_latency_seconds`;
 - `generation_latency_seconds`;
 - `total_latency_seconds`;
