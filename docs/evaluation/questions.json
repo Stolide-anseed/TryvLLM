@@ -1,0 +1,367 @@
+{
+  "dataset_name": "movies_rag_evaluation",
+  "version": "1.0",
+  "language": "ru",
+  "questions": [
+    {
+      "id": "kfp1-001",
+      "question": "Кто выбрал По Воином Дракона?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Мастер Угвей выбрал По Воином Дракона.",
+      "expected_document_ids": ["kung-fu-panda-2008"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "kfp1-002",
+      "question": "Как мастер Шифу смог заинтересовать По тренировками?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Шифу использовал любовь По к еде и построил тренировки вокруг неё.",
+      "expected_document_ids": ["kung-fu-panda-2008"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "kfp1-003",
+      "question": "Что было написано на Свитке Дракона?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "На Свитке Дракона ничего не было написано: его поверхность отражала смотрящего.",
+      "expected_document_ids": ["kung-fu-panda-2008"],
+      "expected_sections": ["Сюжет", "Концовка"]
+    },
+    {
+      "id": "kfp1-004",
+      "question": "Кто победил Тай Лунга и каким приёмом?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "По победил Тай Лунга приёмом «Пальцевый захват Уси».",
+      "expected_document_ids": ["kung-fu-panda-2008"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "kfp1-005",
+      "question": "Почему Тай Лунг стал врагом мастера Шифу?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Тай Лунг ожидал получить титул Воина Дракона, но Угвей отказал ему, а Шифу не смог принять и остановить его стремление к признанию.",
+      "expected_document_ids": ["kung-fu-panda-2008"],
+      "expected_sections": ["Персонажи", "Темы"]
+    },
+    {
+      "id": "kfp1-006",
+      "question": "Кто входит в Неистовую Пятёрку?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Тигрица, Обезьяна, Богомол, Журавль и Гадюка.",
+      "expected_document_ids": ["kung-fu-panda-2008"],
+      "expected_sections": ["Персонажи"]
+    },
+    {
+      "id": "kfp2-001",
+      "question": "Кто является главным злодеем в «Кунг-фу Панде 2» и какое оружие он использует?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Главный злодей — павлин лорд Шэнь, который использует пушки.",
+      "expected_document_ids": ["kung-fu-panda-2-2011"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "kfp2-002",
+      "question": "Почему лорд Шэнь уничтожил деревню панд?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Он пытался предотвратить пророчество о том, что воин чёрно-белой расцветки победит его.",
+      "expected_document_ids": ["kung-fu-panda-2-2011"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "kfp2-003",
+      "question": "Как господин Пинг нашёл По?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Господин Пинг нашёл маленького По в ящике с редисом.",
+      "expected_document_ids": ["kung-fu-panda-2-2011"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "kfp2-004",
+      "question": "Что помогло По победить флот лорда Шэня?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "По обрёл внутренний покой и научился перенаправлять пушечные ядра.",
+      "expected_document_ids": ["kung-fu-panda-2-2011"],
+      "expected_sections": ["Концовка", "Темы"]
+    },
+    {
+      "id": "kfp2-005",
+      "question": "Как погиб лорд Шэнь?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "Лорд Шэнь погиб под обломками собственного оружия.",
+      "expected_document_ids": ["kung-fu-panda-2-2011"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "kfp2-006",
+      "question": "Что становится известно о биологическом отце По в финале?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "В финале выясняется, что биологический отец По живёт в скрытой деревне панд.",
+      "expected_document_ids": ["kung-fu-panda-2-2011"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "shrek-001",
+      "question": "Почему сказочные существа оказались на болоте Шрека?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Лорд Фаркуад изгнал сказочных существ из своих владений на болото Шрека.",
+      "expected_document_ids": ["shrek-2001"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "shrek-002",
+      "question": "Какую сделку Шрек заключил с лордом Фаркуадом?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Шрек согласился спасти принцессу Фиону, а Фаркуад обещал вернуть ему болото.",
+      "expected_document_ids": ["shrek-2001"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "shrek-003",
+      "question": "Какой секрет скрывала принцесса Фиона?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Из-за проклятия по ночам Фиона превращалась в огра.",
+      "expected_document_ids": ["shrek-2001"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "shrek-004",
+      "question": "Почему Шрек решил, что Фиона отвергает его?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Шрек услышал только часть разговора Фионы и ошибочно решил, что она говорит о нём.",
+      "expected_document_ids": ["shrek-2001"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "shrek-005",
+      "question": "Кто победил лорда Фаркуада?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "Лорда Фаркуада победила Дракониха.",
+      "expected_document_ids": ["shrek-2001"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "shrek-006",
+      "question": "В каком облике Фиона осталась после поцелуя истинной любви?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "После поцелуя истинной любви Фиона навсегда осталась в облике огра.",
+      "expected_document_ids": ["shrek-2001"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "knives-001",
+      "question": "Кто расследует смерть Харлана Тромби?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Смерть Харлана Тромби расследует детектив Бенуа Блан.",
+      "expected_document_ids": ["knives-out-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "knives-002",
+      "question": "Что происходит с Мартой, когда она лжёт?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Когда Марта лжёт, её начинает тошнить.",
+      "expected_document_ids": ["knives-out-2019"],
+      "expected_sections": ["Персонажи"]
+    },
+    {
+      "id": "knives-003",
+      "question": "Кому Харлан Тромби оставил своё наследство?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Харлан оставил всё наследство Марте.",
+      "expected_document_ids": ["knives-out-2019"],
+      "expected_sections": ["Сюжет"]
+    },
+    {
+      "id": "knives-004",
+      "question": "Как Рэнсом пытался подставить Марту?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Рэнсом поменял лекарства местами, рассчитывая, что Марта введёт Харлану смертельную дозу.",
+      "expected_document_ids": ["knives-out-2019"],
+      "expected_sections": ["Сюжет", "Концовка"]
+    },
+    {
+      "id": "knives-005",
+      "question": "Почему Марта на самом деле не отравила Харлана?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Марта распознала нужное лекарство без этикетки и ввела правильный препарат.",
+      "expected_document_ids": ["knives-out-2019"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "knives-006",
+      "question": "Что произошло с Рэнсомом в финале?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "Рэнсом попытался напасть на Марту бутафорским ножом, после чего был арестован.",
+      "expected_document_ids": ["knives-out-2019"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "gentlemen-001",
+      "question": "Почему Микки Пирсон хочет продать свой бизнес?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Микки хочет продать бизнес, чтобы уйти на покой.",
+      "expected_document_ids": ["the-gentlemen-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "gentlemen-002",
+      "question": "Кто пытается купить бизнес Микки и тайно снизить его стоимость?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Это делает Мэттью Бергер.",
+      "expected_document_ids": ["the-gentlemen-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "gentlemen-003",
+      "question": "Зачем Флетчер приходит к Рэю?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Флетчер приходит шантажировать Рэя собранной информацией и получить деньги за молчание.",
+      "expected_document_ids": ["the-gentlemen-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "gentlemen-004",
+      "question": "Почему Тренер начинает помогать Рэю?",
+      "category": "single_fact",
+      "answerable": true,
+      "expected_answer": "Тренер помогает Рэю, чтобы компенсировать ущерб, нанесённый его учениками во время нападения на ферму.",
+      "expected_document_ids": ["the-gentlemen-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "gentlemen-005",
+      "question": "Чего добивается Сухой Глаз?",
+      "category": "character",
+      "answerable": true,
+      "expected_answer": "Сухой Глаз хочет захватить бизнес Микки Пирсона.",
+      "expected_document_ids": ["the-gentlemen-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "gentlemen-006",
+      "question": "Кто сохраняет контроль над ситуацией в финале «Джентльменов»?",
+      "category": "ending",
+      "answerable": true,
+      "expected_answer": "Микки Пирсон и Рэй сохраняют контроль: Микки наказывает Бергера, а Рэй находит Флетчера.",
+      "expected_document_ids": ["the-gentlemen-2019"],
+      "expected_sections": ["Концовка"]
+    },
+    {
+      "id": "cross-001",
+      "question": "Как тема принятия себя раскрывается через По и Фиону?",
+      "category": "multi_document",
+      "answerable": true,
+      "expected_answer": "По понимает, что его сила основана на вере в себя, а Фиона принимает свой облик огра и перестаёт соответствовать чужим ожиданиям.",
+      "expected_document_ids": ["kung-fu-panda-2008", "shrek-2001"],
+      "expected_sections": ["Темы", "Концовка"]
+    },
+    {
+      "id": "cross-002",
+      "question": "Чем отличаются причины конфликта Тай Лунга и лорда Шэня?",
+      "category": "multi_document",
+      "answerable": true,
+      "expected_answer": "Тай Лунг действует из-за отказа в признании и титуле Воина Дракона, а лорд Шэнь — из-за страха перед пророчеством и желания сохранить власть.",
+      "expected_document_ids": ["kung-fu-panda-2008", "kung-fu-panda-2-2011"],
+      "expected_sections": ["Персонажи", "Темы"]
+    },
+    {
+      "id": "cross-003",
+      "question": "Как деньги и власть разрушают отношения между персонажами в «Достать ножи» и «Джентльменах»?",
+      "category": "multi_document",
+      "answerable": true,
+      "expected_answer": "В «Достать ножи» борьба за наследство раскрывает жадность и ложь семьи, а в «Джентльменах» желание получить криминальный бизнес приводит к шантажу, предательству и насилию.",
+      "expected_document_ids": ["knives-out-2019", "the-gentlemen-2019"],
+      "expected_sections": ["Темы", "Сюжет"]
+    },
+    {
+      "id": "cross-004",
+      "question": "Какие персонажи используют информацию как оружие в «Достать ножи» и «Джентльменах»?",
+      "category": "multi_document",
+      "answerable": true,
+      "expected_answer": "В «Достать ножи» Рэнсом использует знание о лекарствах и событиях для своей схемы, а в «Джентльменах» Флетчер использует собранную информацию для шантажа.",
+      "expected_document_ids": ["knives-out-2019", "the-gentlemen-2019"],
+      "expected_sections": ["Сюжет", "Персонажи"]
+    },
+    {
+      "id": "cross-005",
+      "question": "Как меняется отношение По к своей семье между первой и второй частями?",
+      "category": "multi_document",
+      "answerable": true,
+      "expected_answer": "В первой части По живёт с господином Пингом и ищет своё предназначение, а во второй узнаёт правду о прошлом, но всё равно принимает Пинга как своего отца.",
+      "expected_document_ids": ["kung-fu-panda-2008", "kung-fu-panda-2-2011"],
+      "expected_sections": ["Сюжет", "Концовка", "Темы"]
+    },
+    {
+      "id": "unanswerable-001",
+      "question": "Кто озвучивал Шрека в русском дубляже?",
+      "category": "unanswerable",
+      "answerable": false,
+      "expected_answer": "В загруженных документах недостаточно информации.",
+      "expected_document_ids": [],
+      "expected_sections": []
+    },
+    {
+      "id": "unanswerable-002",
+      "question": "Какие награды получил фильм «Кунг-фу Панда 2»?",
+      "category": "unanswerable",
+      "answerable": false,
+      "expected_answer": "В загруженных документах недостаточно информации.",
+      "expected_document_ids": [],
+      "expected_sections": []
+    },
+    {
+      "id": "unanswerable-003",
+      "question": "Кто написал музыку к фильму «Достать ножи»?",
+      "category": "unanswerable",
+      "answerable": false,
+      "expected_answer": "В загруженных документах недостаточно информации.",
+      "expected_document_ids": [],
+      "expected_sections": []
+    },
+    {
+      "id": "unanswerable-004",
+      "question": "Какой бюджет был у фильма «Джентльмены»?",
+      "category": "unanswerable",
+      "answerable": false,
+      "expected_answer": "В загруженных документах недостаточно информации.",
+      "expected_document_ids": [],
+      "expected_sections": []
+    },
+    {
+      "id": "unanswerable-005",
+      "question": "В какой день родился Тай Лунг?",
+      "category": "unanswerable",
+      "answerable": false,
+      "expected_answer": "В загруженных документах недостаточно информации.",
+      "expected_document_ids": [],
+      "expected_sections": []
+    }
+  ]
+}

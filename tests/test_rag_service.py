@@ -39,8 +39,23 @@ RESULTS = [
 class FakeRetriever:
     is_ready = True
 
+    def __init__(self):
+        self.last_query = None
+
     def retrieve(self, query: str, top_k: int) -> dict:
+        self.last_query = query
         return {"query": query, "results": RESULTS[:top_k]}
+
+
+class FakeQueryRewriter:
+    def __init__(self, rewritten_query="По победа над Тай Лунгом", error=None):
+        self.rewritten_query = rewritten_query
+        self.error = error
+
+    def rewrite(self, **_kwargs):
+        if self.error:
+            raise self.error
+        return self.rewritten_query
 
 
 class FakeInferenceEngine:
@@ -69,7 +84,13 @@ class FakeInferenceEngine:
 class RAGServiceTests(unittest.TestCase):
     def setUp(self) -> None:
         self.engine = FakeInferenceEngine()
-        self.service = RAGService(FakeRetriever(), self.engine)
+        self.retriever = FakeRetriever()
+        self.rewriter = FakeQueryRewriter()
+        self.service = RAGService(
+            self.retriever,
+            self.engine,
+            query_rewriter=self.rewriter,
+        )
 
     def test_answer_builds_context_and_calls_engine(self) -> None:
         response = self.service.answer(
@@ -81,6 +102,8 @@ class RAGServiceTests(unittest.TestCase):
         )
 
         self.assertEqual(response.answer, "По победил Тай Лунга [1].")
+        self.assertEqual(response.rewritten_query, "По победа над Тай Лунгом")
+        self.assertEqual(self.retriever.last_query, "По победа над Тай Лунгом")
         self.assertEqual(len(response.sources), 1)
         self.assertEqual(response.sources[0].citation, 1)
         self.assertIn("[Источник 1]", self.engine.last_request.messages[1].content)
@@ -99,6 +122,20 @@ class RAGServiceTests(unittest.TestCase):
         self.assertEqual(response.finish_reason, "no_context")
         self.assertEqual(response.sources, [])
         self.assertIsNone(self.engine.last_request)
+
+    def test_answer_falls_back_to_original_question_when_rewriting_fails(self) -> None:
+        service = RAGService(
+            self.retriever,
+            self.engine,
+            query_rewriter=FakeQueryRewriter(error=RuntimeError("rewrite failed")),
+        )
+
+        response = service.answer(
+            RAGRequest(question="Кто победил Тай Лунга?", score_threshold=0.8)
+        )
+
+        self.assertEqual(self.retriever.last_query, "Кто победил Тай Лунга?")
+        self.assertEqual(response.rewritten_query, "Кто победил Тай Лунга?")
 
     def test_build_context_respects_character_limit(self) -> None:
         context, sources = self.service.build_context(
