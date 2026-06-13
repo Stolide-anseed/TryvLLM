@@ -11,6 +11,7 @@ class FakeRAGService:
 
     def answer(self, request: RAGRequest) -> RAGResponse:
         return RAGResponse(
+            mode=request.mode,
             model="test-model",
             answer=f"Ответ на вопрос: {request.question}",
             finish_reason="stop",
@@ -40,6 +41,7 @@ class RAGEndpointTests(unittest.TestCase):
         response = rag_chat(RAGRequest(question="Тестовый вопрос"), request)
 
         self.assertEqual(response.answer, "Ответ на вопрос: Тестовый вопрос")
+        self.assertEqual(response.mode, "rag_rewrite")
 
     def test_get_rag_service_rejects_missing_service(self) -> None:
         request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace()))

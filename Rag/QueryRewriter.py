@@ -42,8 +42,10 @@ class QueryRewriter:
         )
         response = self.engine.chat(request)
         rewritten_query = self._remove_thinking(response.text).strip().strip("\"'")
+        if not rewritten_query:
+            raise RuntimeError("Query rewriter returned an empty query")
 
-        return rewritten_query or normalized_query
+        return rewritten_query
 
     @staticmethod
     def _remove_thinking(text: str) -> str:

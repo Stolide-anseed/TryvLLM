@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
-from Rag.service import NO_CONTEXT_ANSWER, RAGService
+from Rag.service import NO_CONTEXT_ANSWER, NO_RAG_SYSTEM_PROMPT, RAGService, RAGServiceError
 from app.schemas import (
     InferenceResponse,
     Metrics,
@@ -118,6 +118,7 @@ class RAGServiceTests(unittest.TestCase):
         )
 
         self.assertEqual(response.answer, "По победил Тай Лунга [1].")
+        self.assertEqual(response.mode, "rag_rewrite")
         self.assertEqual(response.rewritten_query, "По победа над Тай Лунгом")
         self.assertEqual(self.retriever.last_query, "По победа над Тай Лунгом")
         self.assertEqual(self.retriever.last_sparse_query, "Кто победил Тай Лунга?")
@@ -149,19 +150,56 @@ class RAGServiceTests(unittest.TestCase):
         self.assertEqual(response.sources, [])
         self.assertIsNone(self.engine.last_request)
 
-    def test_answer_falls_back_to_original_question_when_rewriting_fails(self) -> None:
+    def test_answer_raises_when_rewriting_fails(self) -> None:
         service = RAGService(
             self.retriever,
             self.engine,
             query_rewriter=FakeQueryRewriter(error=RuntimeError("rewrite failed")),
         )
 
-        response = service.answer(
-            RAGRequest(question="Кто победил Тай Лунга?", score_threshold=0.8)
+        with self.assertLogs("Rag.service", level="ERROR"):
+            with self.assertRaisesRegex(RAGServiceError, "Query rewriting failed"):
+                service.answer(
+                    RAGRequest(
+                        question="Кто победил Тай Лунга?",
+                        score_threshold=0.8,
+                    )
+                )
+
+        self.assertIsNone(self.retriever.last_query)
+
+    def test_rag_mode_skips_query_rewriting(self) -> None:
+        response = self.service.answer(
+            RAGRequest(
+                mode="rag",
+                question="Кто победил Тай Лунга?",
+                score_threshold=0.8,
+            )
         )
 
         self.assertEqual(self.retriever.last_query, "Кто победил Тай Лунга?")
-        self.assertEqual(response.rewritten_query, "Кто победил Тай Лунга?")
+        self.assertIsNone(response.rewritten_query)
+        self.assertIsNone(response.metrics.query_rewrite_latency_seconds)
+
+    def test_no_rag_mode_skips_retrieval_and_uses_movie_prompt(self) -> None:
+        response = self.service.answer(
+            RAGRequest(
+                mode="no_rag",
+                question="Кто победил Тай Лунга?",
+            )
+        )
+
+        self.assertEqual(response.mode, "no_rag")
+        self.assertEqual(response.sources, [])
+        self.assertIsNone(response.rewritten_query)
+        self.assertIsNone(response.metrics.retrieval_latency_seconds)
+        self.assertIsNone(response.metrics.retrieved_chunks)
+        self.assertIsNone(self.retriever.last_query)
+        self.assertEqual(
+            self.engine.last_request.messages[0].content,
+            NO_RAG_SYSTEM_PROMPT,
+        )
+        self.assertIn("/no_think", self.engine.last_request.messages[1].content)
 
     def test_reciprocal_rank_fusion_combines_scores_and_removes_duplicates(self) -> None:
         dense_results = [

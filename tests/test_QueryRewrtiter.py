@@ -70,6 +70,12 @@ class QueryRewriterTests(unittest.TestCase):
         self.assertEqual(result, "Исходный вопрос")
         self.assertIsNone(engine.last_request)
 
+    def test_rewrite_rejects_empty_model_response(self) -> None:
+        rewriter = QueryRewriter(FakeInferenceEngine("<think>Анализ</think>"))
+
+        with self.assertRaisesRegex(RuntimeError, "empty query"):
+            rewriter.rewrite(query="Исходный вопрос")
+
 
 def main():
     engine = InferenceEngine(get_settings())

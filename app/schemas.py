@@ -3,6 +3,9 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+RAGMode = Literal["no_rag", "rag", "rag_rewrite"]
+
+
 # Общая родительский класс для всех схем
 class APIModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -53,6 +56,7 @@ class HealthResponse(APIModel):
 
 
 class RAGRequest(SamplingRequest):
+    mode: RAGMode = "rag_rewrite"
     max_tokens: int | None = Field(default=200, ge=1, le=512)
     question: str = Field(min_length=1)
     top_k: int = Field(default=5, ge=1, le=10)
@@ -75,16 +79,17 @@ class RAGSource(APIModel):
 
 
 class RAGMetrics(APIModel):
-    query_rewrite_latency_seconds: float = 0.0
-    retrieval_latency_seconds: float
+    query_rewrite_latency_seconds: float | None = None
+    retrieval_latency_seconds: float | None
     generation_latency_seconds: float
     total_latency_seconds: float
-    retrieved_chunks: int
-    used_context_chars: int
+    retrieved_chunks: int | None
+    used_context_chars: int | None
     top_score: float | None
 
 
 class RAGResponse(APIModel):
+    mode: RAGMode
     model: str
     answer: str
     finish_reason: str | None
