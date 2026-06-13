@@ -1,3 +1,5 @@
+import time
+
 from Rag.embedder import Embedder
 from Rag.vector_store import collection_supports_hybrid_search, search
 
@@ -33,7 +35,10 @@ class Retriever:
         query, top_k = self._validate_query(query, top_k)
         sparse_query = self._validate_sparse_query(sparse_query, fallback=query)
 
+        total_started_at = time.perf_counter()
+        embedding_started_at = time.perf_counter()
         query_vector = self.models.encode_query(query=query)
+        embedding_latency = time.perf_counter() - embedding_started_at
 
         if hasattr(query_vector, "tolist"):
             query_vector = query_vector.tolist()
@@ -44,6 +49,7 @@ class Retriever:
             top_k=top_k,
             collection_name=self.coll_name,
         )
+        total_latency = time.perf_counter() - total_started_at
 
         return {
             "dense_query": query,
@@ -51,6 +57,16 @@ class Retriever:
             "collection": self.coll_name,
             "dense_results": self._format_results(response.get("dense_response", [])),
             "sparse_results": self._format_results(response.get("sparse_response", [])),
+            "latencies": {
+                "embedding_seconds": embedding_latency,
+                "dense_search_seconds": float(
+                    response.get("dense_latency_seconds", 0.0)
+                ),
+                "sparse_search_seconds": float(
+                    response.get("sparse_latency_seconds", 0.0)
+                ),
+                "total_seconds": total_latency,
+            },
         }
 
     def _validate_query(self, query, top_k) -> tuple[str, int]:

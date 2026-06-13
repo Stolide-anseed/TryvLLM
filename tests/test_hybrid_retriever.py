@@ -48,6 +48,8 @@ class HybridRetrieverTests(unittest.TestCase):
                     payload={"chunk_id": "sparse-chunk", "text": "sparse result"},
                 )
             ],
+            "dense_latency_seconds": 0.02,
+            "sparse_latency_seconds": 0.03,
         }
 
         response = self.retriever.retrieve(
@@ -67,6 +69,9 @@ class HybridRetrieverTests(unittest.TestCase):
         self.assertEqual(response["sparse_query"], "исходный вопрос")
         self.assertEqual(response["dense_results"][0]["chunk_id"], "dense-id")
         self.assertEqual(response["sparse_results"][0]["chunk_id"], "sparse-chunk")
+        self.assertGreaterEqual(response["latencies"]["embedding_seconds"], 0.0)
+        self.assertEqual(response["latencies"]["dense_search_seconds"], 0.02)
+        self.assertEqual(response["latencies"]["sparse_search_seconds"], 0.03)
 
     @patch("Rag.retriever.search")
     def test_retrieve_uses_dense_query_as_sparse_fallback(self, search_mock) -> None:

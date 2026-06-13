@@ -1,3 +1,4 @@
+import time
 from qdrant_client import QdrantClient, models
 from uuid import NAMESPACE_URL, uuid5
 
@@ -102,6 +103,7 @@ def search(
     collection_name: str,
     sparse_query: str,
 ) -> dict:
+    dense_started_at = time.perf_counter()
     dense_response = client.query_points(
         collection_name=collection_name,
         query=query_vector,
@@ -109,6 +111,9 @@ def search(
         limit=top_k,
         with_payload=True,
     )
+    dense_latency = time.perf_counter() - dense_started_at
+
+    sparse_started_at = time.perf_counter()
     sparse_response = client.query_points(
         collection_name=collection_name,
         query=models.Document(
@@ -119,12 +124,15 @@ def search(
         limit=top_k,
         with_payload=True,
     )
+    sparse_latency = time.perf_counter() - sparse_started_at
 
     return {
         "success": True,
         "collection": collection_name,
         "dense_response": dense_response.points,
         "sparse_response": sparse_response.points,
+        "dense_latency_seconds": dense_latency,
+        "sparse_latency_seconds": sparse_latency,
     }
 
 
