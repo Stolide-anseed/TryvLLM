@@ -204,13 +204,21 @@ curl.exe -X POST "http://localhost:8000/chat" `
 
 ### `POST /rag/chat`
 
-Переформулирует вопрос для dense-поиска, выполняет dense и BM25 поиск в Qdrant,
-объединяет результаты через Reciprocal Rank Fusion, формирует контекст и
-генерирует ответ со ссылками на источники. Для BM25 используется исходный
-вопрос, чтобы сохранить точные слова и имена.
+Поддерживает три режима с единым форматом ответа:
+
+- `no_rag` — модель отвечает из собственных знаний без retrieval;
+- `rag` — hybrid search выполняется по исходному вопросу;
+- `rag_rewrite` — вопрос переформулируется перед dense-поиском.
+
+По умолчанию используется `rag_rewrite`. В режимах с RAG выполняются dense и
+BM25 поиск в Qdrant, объединение через Reciprocal Rank Fusion и генерация ответа
+со ссылками на источники. Для BM25 всегда используется исходный вопрос, чтобы
+сохранить точные слова и имена. Ошибка QueryRewriter в `rag_rewrite` завершает
+запрос ошибкой и не маскируется поиском по исходному вопросу.
 
 ```powershell
 $json = @{
+  mode = "rag_rewrite"
   question = "Кто победил Тай Лунга?"
   top_k = 3
   score_threshold = 0.5
@@ -226,6 +234,7 @@ curl.exe -X POST "http://localhost:8000/rag/chat" `
 
 RAG-ответ содержит:
 
+- фактически использованный режим;
 - ответ модели;
 - поисковый запрос после переформулирования;
 - использованные chunks и нормализованный RRF score;
@@ -237,6 +246,10 @@ RAG-ответ содержит:
 
 Если подходящего контекста нет, LLM не вызывается и сервис сообщает о
 недостатке информации.
+
+Для `no_rag` используются пустые `sources`, `rewritten_query: null` и `null`
+для неприменимых retrieval-метрик. Endpoint всё равно требует готовый
+RAG-сервис: для обычного ответа без зависимости от Qdrant используйте `/chat`.
 
 ## Документы и ingestion
 
@@ -307,7 +320,7 @@ python -m scripts.ingest --recreate
 | `LLM_RAG_DISABLE_THINKING` | `true` | Добавлять `/no_think` для Qwen3 |
 | `LLM_RAG_CANDIDATE_MULTIPLIER` | `3` | Во сколько раз расширять пул кандидатов до RRF |
 | `LLM_RAG_RRF_K` | `60` | Константа сглаживания Reciprocal Rank Fusion |
-| `LLM_QUERY_REWRITING_ENABLED` | `true` | Переформулировать вопрос перед retrieval |
+| `LLM_QUERY_REWRITING_ENABLED` | `true` | Разрешить `rag_rewrite`; при `false` режим вернёт ошибку |
 | `LLM_QUERY_REWRITING_TEMPERATURE` | `0.0` | Temperature для query rewriting |
 | `LLM_QUERY_REWRITING_MAX_TOKENS` | `128` | Лимит токенов для query rewriting |
 | `LLM_QDRANT_URL` | `http://127.0.0.1:6333` | Адрес Qdrant |
@@ -333,6 +346,133 @@ API запускается с одним Uvicorn worker. Несколько work
 - `used_context_chars`;
 - `top_score`.
 
+## Оценка retrieval
+
+Скрипт `scripts/evaluate_retrieval.py` сравнивает `dense`, `BM25` и `hybrid`
+по фиксированному набору `docs/evaluation/questions.json`.
+
+Он рассчитывает:
+
+- document-level `Recall@1`, `Recall@3`, `Recall@5`;
+- Hit Rate@K;
+- MRR;
+- mean, p50, p95 и p99 latency для каждого режима.
+- отдельные агрегаты по категориям вопросов.
+
+Если у вопроса присутствует `expected_chunk_ids`, оценка выполняется по chunks.
+Иначе используются `expected_document_ids`. Вопросы с `answerable=false`
+сохраняются в подробном отчёте, но не участвуют в Recall и MRR.
+Dense и sparse latency измеряются как длительности соответствующих частей
+одного retrieval-запроса, hybrid latency дополнительно включает RRF.
+Перед измерением по умолчанию выполняется один warmup-запрос. Количество можно
+изменить через `--warmup-queries`.
+
+Запуск:
+
+```powershell
+python -m scripts.evaluate_retrieval
+```
+
+Выбор режимов и значений K:
+
+```powershell
+python -m scripts.evaluate_retrieval `
+  --modes dense sparse hybrid `
+  --ks 1 3 5 10
+```
+
+Результаты сохраняются в:
+
+```text
+docs/evaluation/results/retrieval_detailed.json
+docs/evaluation/results/retrieval_summary.csv
+```
+
+## Сравнение режимов ответа
+
+Скрипт `scripts/evaluate_answers.py` запускает каждый вопрос в режимах
+`no_rag`, `rag` и `rag_rewrite`. Порядок режимов перемешивается отдельно для
+каждого вопроса с фиксированным `seed`, а перед измерениями выполняется warmup.
+
+В подробный отчёт сохраняются ответы, источники, rewritten query, token usage,
+retrieval Recall/MRR и latency. Для `no_rag` неприменимые retrieval-метрики
+сохраняются как `null`.
+
+Ответы также были вручную оценены LLM-as-judge относительно `expected_answer`:
+
+- `1.0` — полностью правильный ответ;
+- `0.5` — частично правильный или неполный ответ;
+- `0.0` — неправильный, выдуманный ответ или отсутствие ответа.
+
+`Answer Score` — среднее значение оценок `0.0`, `0.5` и `1.0`, поэтому он
+учитывает частично правильные ответы. `Strict Accuracy` — доля полностью
+правильных ответов с оценкой `1.0`; частично правильные ответы считаются
+ошибками. Для `answerable=false` правильным считается явный отказ без
+выдуманных фактов. Эта оценка проверяет корректность ответа, но не faithfulness
+относительно использованных источников.
+
+На Windows evaluator запускается внутри Docker-контейнера с vLLM. Перед первым
+запуском соберите образ командой `docker build -t tryvllm:dev .` и запустите
+Qdrant. PowerShell-обёртка монтирует проект в контейнер, поэтому отчёты
+сохраняются на хосте.
+
+Запуск всех трёх режимов:
+
+```powershell
+.\scripts\evaluate_answers_docker.ps1 `
+  --modes no_rag rag rag_rewrite `
+  --seed 42 `
+  --warmup-questions 1 `
+  --top-k 5
+```
+
+Запуск одного режима:
+
+```powershell
+.\scripts\evaluate_answers_docker.ps1 --modes rag
+```
+
+Для запуска с другим образом передайте параметр обёртки перед аргументами
+evaluation:
+
+```powershell
+.\scripts\evaluate_answers_docker.ps1 -Image tryvllm:dev --modes no_rag
+```
+
+Результаты сохраняются в:
+
+```text
+docs/evaluation/results/answer_modes.json
+docs/evaluation/results/answer_modes_summary.csv
+docs/evaluation/results/answer_judgements.json
+docs/evaluation/results/answer_judgements_summary.csv
+```
+
+### Текущие результаты
+
+Оценка выполнена на 40 вопросах при `top_k=5`, `temperature=0.0` и
+`max_tokens=200`.
+
+| Режим | Answer Score | Strict Accuracy | Retrieval Recall | Retrieval MRR | Среднее число источников | Generation latency | Total latency | Total latency p95 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `no_rag` | 1.3% | 0.0% | None | None | None | 251 ms | 251 ms | 402 ms |
+| `rag` | 62.5% | 52.5% | 97.1% | 97.1% | 4.68 | 355 ms | 431 ms | 816 ms |
+| `rag_rewrite` | 52.5% | 37.5% | 97.1% | 97.1% | 4.70 | 405 ms | 630 ms | 1074 ms |
+
+Выводы:
+
+- `Answer Score` показывает общую полезность ответов с учётом частично
+  правильных результатов: `rag` набрал `62.5%`, `rag_rewrite` — `52.5%`, а
+  `no_rag` — только `1.3%`.
+- `rag` и `rag_rewrite` показали одинаковые Retrieval Recall и MRR.
+- При одинаковом retrieval-качестве обычный `rag` дал более высокий Answer
+  Score (`62.5%` против `52.5%`) и Strict Accuracy (`52.5%` против `37.5%`).
+- `rag_rewrite` увеличил среднюю total latency примерно на 46% относительно
+  `rag`.
+- На текущем наборе вопросов query rewriting не улучшил качество и увеличил
+  latency, поэтому обычный `rag` обеспечивает лучший баланс качества и
+  скорости.
+
 ## Тестирование
 
 Изолированные тесты RAG не требуют запущенных vLLM и Qdrant:
@@ -344,6 +484,8 @@ API запускается с одним Uvicorn worker. Несколько work
   .\tests\test_hybrid_retriever.py `
   .\tests\test_vector_store.py `
   .\tests\test_ingest.py `
+  .\tests\test_retrieval_evaluation.py `
+  .\tests\test_answer_evaluation.py `
   -v
 ```
 
@@ -387,8 +529,6 @@ TryvLLM/
 - RRF score нормализован в диапазон `0..1`; исходные dense/BM25 scores
   возвращаются отдельно.
 - Размер контекста пока ограничивается символами, а не токенами.
-- Некоторые исходные chunks содержат буквальные `/n`; данные требуют очистки и
-  повторного ingestion.
 - Синхронный `InferenceEngine` защищён `Lock`, поэтому запросы к модели
   обрабатываются последовательно.
 - Streaming, память диалога, reranking и автоматическая оценка RAG пока не
@@ -396,9 +536,5 @@ TryvLLM/
 
 ## Следующие шаги
 
-1. очистить документы и повторно создать collection;
-2. добавить metadata filters;
-3. оценивать retrieval на фиксированном наборе вопросов;
-4. добавить reranker и сравнить его с hybrid search по качеству/latency;
-5. ограничивать контекст по токенам;
-6. добавить streaming и память диалога.
+1. добавить reranker и сравнить его с hybrid search по качеству/latency;
+2. добавить streaming и память диалога.

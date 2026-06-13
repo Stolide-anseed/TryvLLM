@@ -1,0 +1,390 @@
+{
+  "judge": {
+    "type": "manual_llm_as_judge",
+    "judge": "OpenAI Codex (GPT-5)",
+    "evaluated_at": "2026-06-13",
+    "source": "docs/evaluation/results/answer_modes.json",
+    "scope": "Answer correctness against expected_answer; retrieval faithfulness was not evaluated."
+  },
+  "rubric": {
+    "1.0": "Correct: contains all essential expected facts without a material error.",
+    "0.5": "Partially correct: contains a key correct fact but is incomplete or mildly inaccurate.",
+    "0.0": "Incorrect: wrong, fabricated, non-responsive, or missing all essential expected facts.",
+    "unanswerable": "A correct explicit refusal receives 1.0; a vague non-answer receives at most 0.5; a fabricated fact receives 0.0."
+  },
+  "summary": {
+    "no_rag": {
+      "questions": 40,
+      "answer_score": 0.0125,
+      "strict_accuracy": 0.0,
+      "correct": 0,
+      "partially_correct": 1,
+      "incorrect": 39
+    },
+    "rag": {
+      "questions": 40,
+      "answer_score": 0.625,
+      "strict_accuracy": 0.525,
+      "correct": 21,
+      "partially_correct": 8,
+      "incorrect": 11
+    },
+    "rag_rewrite": {
+      "questions": 40,
+      "answer_score": 0.525,
+      "strict_accuracy": 0.375,
+      "correct": 15,
+      "partially_correct": 12,
+      "incorrect": 13
+    }
+  },
+  "category_summary": {
+    "single_fact": {
+      "no_rag": {"questions": 12, "answer_score": 0.0, "strict_accuracy": 0.0},
+      "rag": {"questions": 12, "answer_score": 0.5416666667, "strict_accuracy": 0.4166666667},
+      "rag_rewrite": {"questions": 12, "answer_score": 0.5, "strict_accuracy": 0.3333333333}
+    },
+    "ending": {
+      "no_rag": {"questions": 8, "answer_score": 0.0, "strict_accuracy": 0.0},
+      "rag": {"questions": 8, "answer_score": 0.875, "strict_accuracy": 0.75},
+      "rag_rewrite": {"questions": 8, "answer_score": 0.6875, "strict_accuracy": 0.625}
+    },
+    "character": {
+      "no_rag": {"questions": 10, "answer_score": 0.0, "strict_accuracy": 0.0},
+      "rag": {"questions": 10, "answer_score": 0.55, "strict_accuracy": 0.5},
+      "rag_rewrite": {"questions": 10, "answer_score": 0.4, "strict_accuracy": 0.2}
+    },
+    "multi_document": {
+      "no_rag": {"questions": 5, "answer_score": 0.0, "strict_accuracy": 0.0},
+      "rag": {"questions": 5, "answer_score": 0.4, "strict_accuracy": 0.2},
+      "rag_rewrite": {"questions": 5, "answer_score": 0.3, "strict_accuracy": 0.0}
+    },
+    "unanswerable": {
+      "no_rag": {"questions": 5, "answer_score": 0.1, "strict_accuracy": 0.0},
+      "rag": {"questions": 5, "answer_score": 0.8, "strict_accuracy": 0.8},
+      "rag_rewrite": {"questions": 5, "answer_score": 0.8, "strict_accuracy": 0.8}
+    }
+  },
+  "judgements": [
+    {
+      "id": "kfp1-001",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Repeats the question without naming Master Oogway."},
+        "rag": {"score": 1.0, "reason": "Correctly names Oogway."},
+        "rag_rewrite": {"score": 0.5, "reason": "Describes Oogway but does not name him."}
+      }
+    },
+    {
+      "id": "kfp1-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricates codes and logic."},
+        "rag": {"score": 0.0, "reason": "Does not mention food-based motivation."},
+        "rag_rewrite": {"score": 0.0, "reason": "Does not mention food-based motivation."}
+      }
+    },
+    {
+      "id": "kfp1-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricates a written text from 1982."},
+        "rag": {"score": 0.0, "reason": "Claims a message was written instead of stating the scroll was blank and reflective."},
+        "rag_rewrite": {"score": 0.0, "reason": "Claims a message was written instead of stating the scroll was blank and reflective."}
+      }
+    },
+    {
+      "id": "kfp1-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not identify Po as the winner or the technique."},
+        "rag": {"score": 0.5, "reason": "Names Po and an abbreviated Wuxi technique, but omits the full technique."},
+        "rag_rewrite": {"score": 0.5, "reason": "Names Po and an abbreviated Wuxi technique, but omits the full technique."}
+      }
+    },
+    {
+      "id": "kfp1-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricated explanation."},
+        "rag": {"score": 0.5, "reason": "Correctly identifies the need for recognition but omits Oogway's refusal and Shifu's role."},
+        "rag_rewrite": {"score": 0.5, "reason": "Correctly identifies the need for recognition but omits Oogway's refusal and Shifu's role."}
+      }
+    },
+    {
+      "id": "kfp1-006",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricated answer."},
+        "rag": {"score": 0.0, "reason": "Does not list any member."},
+        "rag_rewrite": {"score": 0.0, "reason": "Incorrectly refuses despite the answer being present."}
+      }
+    },
+    {
+      "id": "kfp2-001",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not identify the villain or weapon."},
+        "rag": {"score": 1.0, "reason": "Correctly identifies Shen and cannons."},
+        "rag_rewrite": {"score": 0.5, "reason": "Correctly identifies Shen but does not name cannons."}
+      }
+    },
+    {
+      "id": "kfp2-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect motivation."},
+        "rag": {"score": 1.0, "reason": "Correctly explains the prophecy."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly explains the prophecy."}
+      }
+    },
+    {
+      "id": "kfp2-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrectly says Po was found in a forest."},
+        "rag": {"score": 1.0, "reason": "Correctly states Po was found in a radish crate."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly states Po was found in a radish crate."}
+      }
+    },
+    {
+      "id": "kfp2-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not answer the question."},
+        "rag": {"score": 1.0, "reason": "Includes inner peace and redirecting cannonballs."},
+        "rag_rewrite": {"score": 0.0, "reason": "Attributes the victory to Tigress and misses both essential facts."}
+      }
+    },
+    {
+      "id": "kfp2-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect death."},
+        "rag": {"score": 1.0, "reason": "Correctly states Shen died under his own weapon."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly states Shen died under his own weapon."}
+      }
+    },
+    {
+      "id": "kfp2-006",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricated answer."},
+        "rag": {"score": 1.0, "reason": "Correctly states Po's father is alive in a hidden panda village."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly states Po's father is alive in a hidden panda village."}
+      }
+    },
+    {
+      "id": "shrek-001",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect explanation."},
+        "rag": {"score": 1.0, "reason": "Correctly states Farquaad exiled them to Shrek's swamp."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly states Farquaad exiled them to Shrek's swamp."}
+      }
+    },
+    {
+      "id": "shrek-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricated deal."},
+        "rag": {"score": 0.5, "reason": "Correctly mentions rescuing Fiona but omits the promised return of the swamp."},
+        "rag_rewrite": {"score": 0.5, "reason": "Correctly mentions rescuing Fiona but omits the promised return of the swamp."}
+      }
+    },
+    {
+      "id": "shrek-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect secret."},
+        "rag": {"score": 1.0, "reason": "Correctly describes Fiona's nightly transformation."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly describes Fiona's nightly transformation."}
+      }
+    },
+    {
+      "id": "shrek-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect and reverses the situation."},
+        "rag": {"score": 0.0, "reason": "Misses the overheard partial conversation and misunderstanding."},
+        "rag_rewrite": {"score": 0.0, "reason": "Misses the overheard partial conversation and misunderstanding."}
+      }
+    },
+    {
+      "id": "shrek-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not name Dragon."},
+        "rag": {"score": 1.0, "reason": "Correctly names Dragon."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly names Dragon."}
+      }
+    },
+    {
+      "id": "shrek-006",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not state Fiona remained an ogre."},
+        "rag": {"score": 1.0, "reason": "Correctly states Fiona remained an ogre."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly states Fiona remained an ogre."}
+      }
+    },
+    {
+      "id": "knives-001",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricated answer."},
+        "rag": {"score": 0.0, "reason": "Repeats the question without naming Benoit Blanc."},
+        "rag_rewrite": {"score": 0.0, "reason": "Repeats the question without naming Benoit Blanc."}
+      }
+    },
+    {
+      "id": "knives-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect symptom."},
+        "rag": {"score": 0.0, "reason": "Does not mention vomiting."},
+        "rag_rewrite": {"score": 0.0, "reason": "Does not mention vomiting."}
+      }
+    },
+    {
+      "id": "knives-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Names a fabricated heir."},
+        "rag": {"score": 0.0, "reason": "Does not name Marta."},
+        "rag_rewrite": {"score": 0.0, "reason": "Does not name Marta."}
+      }
+    },
+    {
+      "id": "knives-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect explanation."},
+        "rag": {"score": 0.5, "reason": "Mentions parts of Ransom's scheme but omits the central medicine swap."},
+        "rag_rewrite": {"score": 0.5, "reason": "Mentions parts of Ransom's scheme but omits the central medicine swap."}
+      }
+    },
+    {
+      "id": "knives-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect explanation."},
+        "rag": {"score": 0.5, "reason": "Alludes to professional recognition but does not clearly state she identified the correct medicine."},
+        "rag_rewrite": {"score": 0.5, "reason": "Alludes to professional recognition but does not clearly state she identified the correct medicine."}
+      }
+    },
+    {
+      "id": "knives-006",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrectly says Ransom was absent."},
+        "rag": {"score": 0.5, "reason": "Correctly mentions the arrest but omits the prop-knife attack."},
+        "rag_rewrite": {"score": 0.0, "reason": "Incorrectly assigns Marta's final balcony scene to Ransom."}
+      }
+    },
+    {
+      "id": "gentlemen-001",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect motivation."},
+        "rag": {"score": 0.0, "reason": "Confuses Mickey's motivation with Berger's scheme."},
+        "rag_rewrite": {"score": 0.0, "reason": "Confuses Mickey's motivation with Berger's scheme."}
+      }
+    },
+    {
+      "id": "gentlemen-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not identify Matthew Berger."},
+        "rag": {"score": 1.0, "reason": "Correctly identifies Matthew Berger."},
+        "rag_rewrite": {"score": 0.5, "reason": "Includes Matthew Berger but incorrectly adds Dry Eye as the buyer lowering the price."}
+      }
+    },
+    {
+      "id": "gentlemen-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect explanation."},
+        "rag": {"score": 1.0, "reason": "Correctly describes selling information and demanding money for silence."},
+        "rag_rewrite": {"score": 0.5, "reason": "Correctly mentions selling compromising information but omits the demand for silence."}
+      }
+    },
+    {
+      "id": "gentlemen-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Incorrect motivation."},
+        "rag": {"score": 1.0, "reason": "Correctly says Coach is compensating for his students' actions."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly says Coach is compensating for his students' actions."}
+      }
+    },
+    {
+      "id": "gentlemen-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricated goal."},
+        "rag": {"score": 1.0, "reason": "Correctly identifies the goal of acquiring Mickey's business."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly identifies the goal of acquiring Mickey's business."}
+      }
+    },
+    {
+      "id": "gentlemen-006",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Names a fabricated person."},
+        "rag": {"score": 1.0, "reason": "Correctly identifies Mickey and Ray."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly identifies Mickey and Ray despite awkward wording."}
+      }
+    },
+    {
+      "id": "cross-001",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Generic response without the expected character-specific facts."},
+        "rag": {"score": 1.0, "reason": "Correctly explains self-acceptance for both Po and Fiona."},
+        "rag_rewrite": {"score": 0.5, "reason": "Correctly covers Fiona and general acceptance but omits Po's specific realization."}
+      }
+    },
+    {
+      "id": "cross-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Generic and does not state either motivation."},
+        "rag": {"score": 0.0, "reason": "Does not state recognition versus fear of prophecy."},
+        "rag_rewrite": {"score": 0.0, "reason": "Does not state recognition versus fear of prophecy."}
+      }
+    },
+    {
+      "id": "cross-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Generic response without film-specific comparison."},
+        "rag": {"score": 0.5, "reason": "Partially covers family conflict and power but misses key mechanisms in The Gentlemen."},
+        "rag_rewrite": {"score": 0.5, "reason": "Partially covers inheritance conflict and information as a weapon but remains incomplete."}
+      }
+    },
+    {
+      "id": "cross-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Does not identify characters."},
+        "rag": {"score": 0.5, "reason": "Correctly identifies Fletcher in The Gentlemen but gives incorrect characters for Knives Out."},
+        "rag_rewrite": {"score": 0.5, "reason": "Correctly identifies Fletcher in The Gentlemen but gives incorrect characters for Knives Out."}
+      }
+    },
+    {
+      "id": "cross-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricates a grandmother storyline."},
+        "rag": {"score": 0.0, "reason": "Confuses the films and does not explain Po's relationship with Ping."},
+        "rag_rewrite": {"score": 0.0, "reason": "Confuses the films and does not explain Po's relationship with Ping."}
+      }
+    },
+    {
+      "id": "unanswerable-001",
+      "modes": {
+        "no_rag": {"score": 0.5, "reason": "Avoids fabrication but asks for unnecessary clarification instead of explicitly stating uncertainty."},
+        "rag": {"score": 0.0, "reason": "Produces a non-answer with a misleading citation instead of refusing."},
+        "rag_rewrite": {"score": 0.0, "reason": "Produces a non-answer with a misleading citation instead of refusing."}
+      }
+    },
+    {
+      "id": "unanswerable-002",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Makes an unsupported claim that the film received no awards."},
+        "rag": {"score": 1.0, "reason": "Correctly states that the documents contain no award information."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly states that the documents contain no award information."}
+      }
+    },
+    {
+      "id": "unanswerable-003",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricates a composer."},
+        "rag": {"score": 1.0, "reason": "Correctly refuses due to missing context."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly refuses due to missing context."}
+      }
+    },
+    {
+      "id": "unanswerable-004",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricates a budget."},
+        "rag": {"score": 1.0, "reason": "Correctly refuses due to missing context."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly refuses due to missing context."}
+      }
+    },
+    {
+      "id": "unanswerable-005",
+      "modes": {
+        "no_rag": {"score": 0.0, "reason": "Fabricates a birth date."},
+        "rag": {"score": 1.0, "reason": "Correctly refuses due to missing context."},
+        "rag_rewrite": {"score": 1.0, "reason": "Correctly refuses due to missing context."}
+      }
+    }
+  ]
+}

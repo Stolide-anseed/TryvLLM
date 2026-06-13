@@ -1,0 +1,4 @@
+mode,questions,answer_score,strict_accuracy,correct,partially_correct,incorrect
+no_rag,40,0.0125,0.0,0,1,39
+rag,40,0.625,0.525,21,8,11
+rag_rewrite,40,0.525,0.375,15,12,13
